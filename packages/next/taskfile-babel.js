@@ -6,26 +6,26 @@ const path = require('path')
 // eslint-disable-next-line import/no-extraneous-dependencies
 const transform = require('@babel/core').transform
 
+const babelClientPresetEnvOptions = {
+  modules: 'commonjs',
+  targets: {
+    esmodules: true,
+  },
+  bugfixes: true,
+  loose: true,
+  // This is handled by the Next.js webpack config that will run next/babel over the same code.
+  exclude: [
+    'transform-typeof-symbol',
+    'transform-async-to-generator',
+    'transform-spread',
+    'proposal-dynamic-import',
+  ],
+}
+
 const babelClientOpts = {
   presets: [
     '@babel/preset-typescript',
-    [
-      '@babel/preset-env',
-      {
-        modules: 'commonjs',
-        targets: {
-          esmodules: true,
-        },
-        bugfixes: true,
-        loose: true,
-        // This is handled by the Next.js webpack config that will run next/babel over the same code.
-        exclude: [
-          'transform-typeof-symbol',
-          'transform-async-to-generator',
-          'transform-spread',
-        ],
-      },
-    ],
+    ['@babel/preset-env', babelClientPresetEnvOptions],
     ['@babel/preset-react', { useBuiltIns: true }],
   ],
   plugins: [
@@ -82,7 +82,7 @@ module.exports = function (task) {
   task.plugin('babel', {}, function* (
     file,
     serverOrClient,
-    { stripExtension } = {}
+    { stripExtension, dev } = {}
   ) {
     // Don't compile .d.ts
     if (file.base.endsWith('.d.ts')) return
@@ -111,7 +111,7 @@ module.exports = function (task) {
             ]
           : false,
       ].filter(Boolean),
-      compact: true,
+      compact: !dev,
       babelrc: false,
       configFile: false,
       cwd: __dirname,
